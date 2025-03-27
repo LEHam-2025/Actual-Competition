@@ -9,3 +9,6 @@ Plan for this repository:
 
 
 ...I probably am alone in here, aren't I?
+
+when im here, you will never be alone
+~john gmign
