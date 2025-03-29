@@ -75,10 +75,13 @@ long microsecondsToMm(long microseconds) {
 //Functions for extra commands
 
 void command_cr_write(int time) {
-  //Analog write
-  //Pretty self explanatory
-  //For cr servos especially
-  int pin = read_pin();
+  /*
+  *A servo writing function
+  *Mostly for cr servos
+  *Currently only has three possible speeds
+  *Until I figure out how to get an input from the python
+  */
+  int pin = 10;
   Servo ThisServo;
   ThisServo.attach(pin);
   ThisServo.writeMicroseconds(time);
