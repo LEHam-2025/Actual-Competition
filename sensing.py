@@ -12,7 +12,9 @@ r = Robot()
 
 #The respective boards of the robot
 
-MOTORS = r.motor_board.motors #There is only one motor board, with two motors
+MOTOR1 = robot.motor_boards["SR0HDM"]
+MOTOR2 = robot.motor_boards["SR0NBL"]
+
 SERVOS = r.servo_board.servos #There is only one servo, which controls the arm
 POWER = r.power_board.outputs #There is only one non-standard connection, in position H0, which controls the vacuum
 CAMERA = r.camera
