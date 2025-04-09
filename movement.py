@@ -13,10 +13,19 @@ from sensing import *
 from math import degrees, cos
 
 
-#Coefficients stored as constants to allow measurement of movement in helpful units
-#These may not be exactly right, so feel free to change them
-MOVE_CONST = 1     #The move constant makes the robot move roughly 1/255 mm per drive unit
-TURN_CONST = 0.015 #The turn constant allows the robot to turn in degrees
+DCONST = 0.4 #DRIVE CONSTANT - SPEED OF DRIVING
+ACONST = 0.4 #ANGLE CONSTANT - SPEED OF TURN
+
+DTIME = 2.5827 #DRIVE TIME - SEE CODE
+ATIME = 0.0135 #TIME TO TURN
+
+BIAS00 = -0.95 #THESE BIASES ARE FOR
+BIAS01 = 0.95 #CALIBRATIONS OF THE 
+BIAS10 = 1 #MOTORS SO THEY TURN AT
+BIAS11 = -1 #THE SAME SPEED
+
+PINIONSERVO = 1 #MAKE ARM GO UP DOWN
+ARMSERVO = 0 #CLOSE OPEN ARM
 
 
 
@@ -54,86 +63,45 @@ def tower(marker_ID):
         return
 
 def drive(distance, rest=0.1):
-    '''
-    This function moves the robot forward some distance by
-    letting the robot move for a time equal to the inputted distance * MOVE_CONST.
-    A negative distance will move the robot backwards.
-    '''
-
-    if distance >= 0:
-        MOTORS[0].power = 0.2
-        MOTORS[1].power = 0.2
-    else:
-        MOTORS[0].power = -0.2
-        MOTORS[1].power = -0.2
-        
-    r.sleep(abs(distance)*MOVE_CONST)
-    
-    MOTORS[0].power = 0
-    MOTORS[1].power = 0
-    r.sleep(rest) 
-    #Pauses the robot at the end of the action to minimise randomness in ending position 
+    #set both motors to be forward speed
+    MOTOR1.motors[0].power = BIAS00 * DCONST
+    MOTOR1.motors[1].power = BIAS01 * DCONST
+    MOTOR2.motors[0].power = BIAS10 * DCONST
+    MOTOR2.motors[1].power = BIAS11 * DCONST
+    robot.sleep(distance * DTIME)
+    MOTOR1.motors[0].power = 0
+    MOTOR1.motors[1].power = 0
+    MOTOR2.motors[0].power = 0
+    MOTOR2.motors[1].power = 0
 
 def turn(angle, unit = 'd', speed = 0.2):
-    '''
-    This function turns the robot clockwise by some angle by
-    giving the wheels opposite powers and letting the robot move
-    for a time equal to the inputted angle * TURN_CONST.
-    A negative angle will move the robot anticlockwise.
-    Unit defaults to degrees, but if it is given as r, 
-    it will treat it as a radians value.
-    '''
-
-    alt_constant = TURN_CONST*(0.2/speed)
-    if unit == 'r': #if the angle is in radians, convert to degrees
-        angle = degrees(angle)
-    if angle < 0: #Turn the other way
-        angle = abs(angle)
-        MOTORS[0].power = -speed 
-        MOTORS[1].power = speed   
-        r.sleep(angle*TURN_CONST)
-    else:
-        MOTORS[1].power = -speed
-        MOTORS[0].power = speed
-        r.sleep(angle*alt_constant)
-    MOTORS[0].power = 0
-    MOTORS[1].power = 0
-    
-    r.sleep(0.1)
+    MOTOR1.motors[0].power = BIAS00 * ACONST
+    MOTOR1.motors[1].power = BIAS01 * ACONST
+    MOTOR2.motors[0].power = -BIAS10 * ACONST
+    MOTOR2.motors[1].power = -BIAS11 * ACONST
+    robot.sleep(angle * ATIME)
+    MOTOR1.motors[0].power = 0
+    MOTOR1.motors[1].power = 0
+    MOTOR2.motors[0].power = 0
+    MOTOR2.motors[1].power = 0
 
 def pickup(start_height = None, end_height = None):
-    '''
-    This function turns on the robot's vacuum arm. 
-    If start_height and end_height are specified, the arm 
-    will move to start_height before activating and to end_height after activating
-    '''
-
-    r.sleep(0.1)
-    if start_height != None:
-        SERVOS[0].position = start_height #SERVOS[0] is the arm servo
-
-    POWER[OUT_H0].is_enabled = True #POWER[OUT_H0] is the power to the vacuum
-    
-    r.sleep(0.5)
-    if end_height != None:
-        SERVOS[0].position = end_height
-
-    r.sleep(0.1)
+    servoBoard.servos[ARMSERVO].position = 0.3
+    robot.sleep(4)
+    servoBoard.servos[ARMSERVO].position = -0.3
+    robot.sleep(6)
+    servoBoard.servos[ARMSERVO].position = 0
+    servoBoard.servos[PINIONSERVO].position = 1
+    robot.sleep(4)
+    servoBoard.servos[PINIONSERVO].position = 0
      
 def drop(start_height = None):
-    '''
-    This function turns off the robot's vacuum arm. 
-    If start_height and end_height are specified, the arm 
-    will move to start_height before deactivating and to end_height after deactivating
-    '''
-
-    
-    if start_height != None:
-        SERVOS[0].position = start_height
-    
-    POWER[OUT_H0].is_enabled = False
-
-    SERVOS[0].position = 1
+    servoBoard.servos[ARMSERVO].position = -0.3
+    robot.sleep(4)
+    servoBoard.servos[ARMSERVO].position = 0
+    servoBoard.servos[PINIONSERVO].position = -1
+    robot.sleep(4)
+    servoBoard.servos[PINIONSERVO].position = 0
 
 def arm_move(new_pos):
     '''
