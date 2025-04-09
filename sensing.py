@@ -30,10 +30,10 @@ MEANS = [ #The categories of marker ids. In the form ['first id', 'last id', Gro
 [199, 200, 6, 'high rise']] #centre high rise
 
 ##Pins##
-#front_ultra = (2, 3)
-#left_ultra = (4, 5)
-#right_ultra = (6, 7)
-#back_ultra = (8, 9)
+#front_ultra = (4, 3)
+#left_ultra = (7, 6)
+#right_ultra = (13, 12)
+#back_ultra = (11, 10)
 FRONT_LEFT_BUMP = ARDUINO.pins[10]
 FRONT_RIGHT_BUMP = ARDUINO.pins[11]
 REAR_LEFT_BUMP = ARDUINO.pins[12]
@@ -80,7 +80,7 @@ def front_space():
     if FRONT_LEFT_BUMP.digital_read() or FRONT_RIGHT_BUMP.digital_read():
         return 0
 
-    ultra_dist = ARDUINO.ultrasound_measure(2, 3)
+    ultra_dist = ARDUINO.ultrasound_measure(4, 3)
     if not ultra_dist:
         ultra_dist = 5750
     
@@ -100,7 +100,7 @@ def back_space():
     if REAR_LEFT_BUMP.digital_read() or REAR_RIGHT_BUMP.digital_read():
         return 0
 
-    ultra_dist = ARDUINO.ultrasound_measure(8, 9)
+    ultra_dist = ARDUINO.ultrasound_measure(11, 10)
     if not ultra_dist:
         ultra_dist = 5750
     
@@ -111,7 +111,7 @@ def right_space():
     Returns the unobscured distance, in mm, to the right of the robot.
     This considers the right ultrasound.
     '''
-    ultra_dist = ARDUINO.ultrasound_measure(6, 7)
+    ultra_dist = ARDUINO.ultrasound_measure(13, 12)
     if not ultra_dist:
         ultra_dist = 5750
 
@@ -122,7 +122,7 @@ def left_space():
     Returns the unobscured distance, in mm, to the left of the robot.
     This considers the left ultrasound.
     '''
-    ultra_dist = ARDUINO.ultrasound_measure(4, 5)
+    ultra_dist = ARDUINO.ultrasound_measure(7, 6)
     if not ultra_dist:
         ultra_dist = 5750
 
