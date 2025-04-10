@@ -34,17 +34,10 @@ MEANS = [ #The categories of marker ids. In the form ['first id', 'last id', Gro
 #left_ultra = (7, 6)
 #right_ultra = (13, 12)
 #back_ultra = (11, 10)
-FRONT_LEFT_BUMP = ARDUINO.pins[10]
-FRONT_RIGHT_BUMP = ARDUINO.pins[11]
-REAR_LEFT_BUMP = ARDUINO.pins[12]
-REAR_RIGHT_BUMP = ARDUINO.pins[13]
-
-FRONT_LEFT_BUMP.mode = INPUT
-FRONT_RIGHT_BUMP.mode = INPUT
-REAR_LEFT_BUMP.mode = INPUT
-REAR_RIGHT_BUMP.mode = INPUT
 
 myZone = None
+
+
 
 def free_space(threshold: int = 500):
     '''
@@ -75,10 +68,8 @@ def is_space(direction: str, threshold: int = 500) -> bool:
 def front_space():
     '''
     Returns the unobscured distance, in mm, in front of the robot.
-    This considers the front bumpers, the front ultrasound and the camera
+    This considers the front ultrasound and the camera
     '''
-    if FRONT_LEFT_BUMP.digital_read() or FRONT_RIGHT_BUMP.digital_read():
-        return 0
 
     ultra_dist = ARDUINO.ultrasound_measure(4, 3)
     if not ultra_dist:
@@ -95,10 +86,8 @@ def front_space():
 def back_space():
     '''
     Returns the unobscured distance, in mm, behind the robot.
-    This considers the rear bumpers and the rear ultrasound
+    This considers the rear ultrasound
     '''
-    if REAR_LEFT_BUMP.digital_read() or REAR_RIGHT_BUMP.digital_read():
-        return 0
 
     ultra_dist = ARDUINO.ultrasound_measure(11, 10)
     if not ultra_dist:
