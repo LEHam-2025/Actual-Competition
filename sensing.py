@@ -8,12 +8,12 @@ from math import inf
 from math import sin
 from sr.robot3 import *
 
-r = Robot()
+r = Robot(wait_for_start = False)
 
 #The respective boards of the robot
 
-MOTOR1 = robot.motor_boards["SR0HDM"]
-MOTOR2 = robot.motor_boards["SR0NBL"]
+MOTOR1 = r.motor_boards["SR0HDM"]
+MOTOR2 = r.motor_boards["SR0NBL"]
 
 SERVOS = r.servo_board.servos #There is only one servo, which controls the arm
 POWER = r.power_board.outputs #There is only one non-standard connection, in position H0, which controls the vacuum
@@ -29,20 +29,21 @@ MEANS = [ #The categories of marker ids. In the form ['first id', 'last id', Gro
 [195, 199, 5, 'mid rise'], #high rises
 [199, 200, 6, 'high rise']] #centre high rise
 
-##Pins##
-#front_ultra = (4, 3)
-#left_ultra = (7, 6)
-#right_ultra = (13, 12)
-#back_ultra = (11, 10)
+##Pins##      (trig, echo)
+#front_ultra = (3, 4)   
+#left_ultra = (6, 7)
+#right_ultra = (12, 13)
+#back_ultra = (10, 11)
 
-myZone = None
+CAM_HEIGHT = 0          #Remember to update with the camera height
+myZone = 'z' + str(r.zone)
 
+r.wait_start()          #Initialise stuff and then wait for the start button to be pressed
 
-
-def free_space(threshold: int = 500):
+def free_space(threshold: int = 500) -> list[str]:
     '''
-    Returns all the directions that are unblocked.
-    If threshold is given, passes that to the is_space
+    Returns a list with strings of all the directions that are unblocked.
+    \nIf threshold is given, passes that to the is_space
     function
     '''
     return [direction for direction in ['front', 'back', 'left', 'right'] if is_space(direction, threshold)]
@@ -50,7 +51,7 @@ def free_space(threshold: int = 500):
 def is_space(direction: str, threshold: int = 500) -> bool:
     '''
     Returns a boolean value of whether there is enough space in a certain direction.
-    The threshold defaults to 500mm
+    \nThe threshold defaults to 500mm
     '''
     match direction:
         case 'front':
@@ -65,10 +66,10 @@ def is_space(direction: str, threshold: int = 500) -> bool:
             print('Not a direction')
             return False
 
-def front_space():
+def front_space() -> int:
     '''
-    Returns the unobscured distance, in mm, in front of the robot.
-    This considers the front ultrasound and the camera
+    Returns an integer with the unobscured distance, in mm, in front of the robot.
+    \nThis considers the front ultrasound and the camera
     '''
 
     ultra_dist = ARDUINO.ultrasound_measure(4, 3)
@@ -83,10 +84,10 @@ def front_space():
     
     return min([ultra_dist, cam_dist])
 
-def back_space():
+def back_space() -> int:
     '''
-    Returns the unobscured distance, in mm, behind the robot.
-    This considers the rear ultrasound
+    Returns an integer with the unobscured distance, in mm, behind the robot.
+    \nThis considers the rear ultrasound
     '''
 
     ultra_dist = ARDUINO.ultrasound_measure(11, 10)
@@ -95,30 +96,35 @@ def back_space():
     
     return ultra_dist
 
-def right_space():
+def right_space() -> int:
     '''
-    Returns the unobscured distance, in mm, to the right of the robot.
-    This considers the right ultrasound.
+    Returns an integer with the unobscured distance, in mm, to the right of the robot.
+    \nThis considers the right ultrasound.
     '''
+
     ultra_dist = ARDUINO.ultrasound_measure(13, 12)
     if not ultra_dist:
         ultra_dist = 5750
 
     return ultra_dist
 
-def left_space():
+def left_space() -> int:
     '''
-    Returns the unobscured distance, in mm, to the left of the robot.
-    This considers the left ultrasound.
+    Returns an integer with the unobscured distance, in mm, to the left of the robot.
+    \nThis considers the left ultrasound.
     '''
+
     ultra_dist = ARDUINO.ultrasound_measure(7, 6)
     if not ultra_dist:
         ultra_dist = 5750
 
     return ultra_dist
 
-def stacked(mark1, mark2):
-    '''Returns a boolean value denoting whether two markers are stacked or not'''
+def stacked(mark1, mark2) -> bool:
+    '''
+    Returns a boolean value denoting whether two markers are stacked or not.
+    \nIt compares their distances, heights and horizontal distances.
+    '''
 
     hoz_tolerance = 0.18
     vert_tolerance = 50
@@ -133,13 +139,21 @@ def stacked(mark1, mark2):
     
     return False
 
-def max_height(stack):
+def max_height(stack: list) -> int:
+    '''
+    Basically a wrapper for the height function.
+    \nReturns an integer with the maximum height of a stack by 
+    considering the first item in the list, which should be the highest.
+    '''
     return height(stack[0])
 
-def id_type(in_id, type_out = 0):
-    '''Returns the marker category. type_out defualts to 0, 
-    returning the number for easier handling, but can be set to 1
-    to return a string representation.'''
+def id_type(in_id: int, type_out: int = 0) -> (int | str):
+    '''
+    Returns the marker category
+    \ntype_out defaults to 0, which returns an integer for easier handling, 
+    but can be set to 1 to return a string representation.
+    \nThe list of meanings can be found at the start of the file as MEANS
+    '''
 
     for type in MEANS:
         if in_id in range(type[0], type[1]):
@@ -148,14 +162,17 @@ def id_type(in_id, type_out = 0):
             else:
                 return type[3]
 
-def get_angle(markerID, type = 'y'):
-    '''Returns the yaw angle of the
+def get_angle(markerID: int, type: str = 'y') -> float:
+    '''
+    Returns the yaw angle of the
     first marker spotted that matches the inputted ID.
-    Returns 10 if the marker is not seen'''
-    result = 0
+    \nReturns 10 if the marker is not seen.
+    \nWhat this actually means is that if two faces of a marker are seen, only one of them is considered.
+    '''
+    result: float = 0
     
     try: #This is actually awful practice, but whatever
-        for _ in range(3):
+        for _ in range(3):          #Take an average of three readings to improve accuracy
             markers = CAMERA.see()
 
             for marker in markers:
@@ -166,15 +183,17 @@ def get_angle(markerID, type = 'y'):
                         result += marker.position.horizontal_angle
                     break
         if result == 0:
-            return 10
+            return 10.0
         return (result/3)
     except: #And it gets worse
         return 10
 
-def get_distance(markerID):
-    '''Returns the distance in mm to the
+def get_distance(markerID: int) -> int:
+    '''
+    Returns the distance in mm to the
     first marker spotted that matches the inputted ID.
-    Returns inf if the marker is not seen'''
+    \nReturns inf if the marker is not seen.
+    '''
     markers = CAMERA.see()
 
     for marker in markers:
@@ -183,13 +202,20 @@ def get_distance(markerID):
 
     return inf
 
-def dist_sort(marker):
-    '''For the sort function. 
-    Returns the distance to the marker'''
+def dist_sort(marker) -> int:
+    '''
+    Pretty much just for the sort function. 
+    \nReturns the distance to the marker in millimetres by accessing its distance attribute
+    '''
 
     return marker.position.distance
 
-def is_type(marker, type = 'Any'):
+def is_type(marker, type: str = 'Any') -> bool:
+    '''
+    Returns a boolean saying whether the marker is of a certain type.
+    \ntype defaults to Any, meaning it always returns True
+    '''
+
     if type == 'Any':
         return True
     
@@ -198,16 +224,23 @@ def is_type(marker, type = 'Any'):
     else:
         return False
 
-def height(marker):
-    '''Returns the vertical height of a marker'''
-    return (sin(marker.position.vertical_angle)*marker.position.distance)
+def height(marker) -> float:
+    '''
+    Returns the vertical height of a marker using trig.
+    \nAdds the camera height so that there are no negatives
+    \nDon't worry about all the assumptions.
+    '''
 
-def get_markers(type = 'Any', floor = True):
+    return (sin(marker.position.vertical_angle)*marker.position.distance) + CAM_HEIGHT
+
+def get_markers(type: str = 'Any', floor: bool = True) -> list:
     '''
-    Returns the list of markers seen.
-    If type is given, only returns markers of a specific category
-    floor defaults to True, only returning grounded markers
+    Returns a list of the markers seen.
+    \nIf type is given, only returns markers of a specific category
+    \nfloor defaults to True, only returning grounded markers.
+    \nSorts the markers by distance as well; if an unsorted list of markers is needed please use CAMERA.see() directly.
     '''
+
     markers = CAMERA.see()
 
     if type != 'Any':
