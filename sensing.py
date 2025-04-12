@@ -5,7 +5,7 @@ This is the first file in the chain.
 '''
 
 from math import inf
-from math import sin
+from math import sin, cos
 from sr.robot3 import *
 
 r = Robot(wait_for_start = False)
@@ -35,7 +35,8 @@ MEANS = [ #The categories of marker ids. In the form ['first id', 'last id', Gro
 #right_ultra = (12, 13)
 #back_ultra = (10, 11)
 
-CAM_HEIGHT = 0          #Remember to update with the camera height
+CAM_HEIGHT = 0
+CAM_DIST = 220
 myZone = 'z' + str(r.zone)
 
 r.wait_start()          #Initialise stuff and then wait for the start button to be pressed
@@ -169,8 +170,9 @@ def get_angle(markerID: int, type: str = 'y') -> float:
     \nReturns 10 if the marker is not seen.
     \nWhat this actually means is that if two faces of a marker are seen, only one of them is considered.
     '''
-    result: float = 0
-    
+    ang_result: float = 0
+    dist_result: float = 0
+
     try: #This is actually awful practice, but whatever
         for _ in range(3):          #Take an average of three readings to improve accuracy
             markers = CAMERA.see()
@@ -178,13 +180,14 @@ def get_angle(markerID: int, type: str = 'y') -> float:
             for marker in markers:
                 if marker.id == markerID:
                     if type == 'y':
-                        result +=  marker.orientation.yaw
+                        ang_result +=  marker.orientation.yaw
                     else:
-                        result += marker.position.horizontal_angle
+                        ang_result += marker.position.horizontal_angle
+                    dist_result += marker.position.distance
                     break
-        if result == 0:
-            return 10.0
-        return (result/3)
+        if ang_result == 0:
+            return 10
+        return (cos((result/3))*(dist_result/3)) + CAM_DIST
     except: #And it gets worse
         return 10
 

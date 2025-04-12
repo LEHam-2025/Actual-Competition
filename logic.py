@@ -116,6 +116,8 @@ def deposit(dest: (str | int) = 'cen', dist_from = 1) -> None:
     elif dest == 'cen':
         drive_towards(199, dist_from, 0.01)
         tower_height = [1, -1]
+    elif dest == 'back':
+        drive_towards('back', dist_from, 0.05)
     else:
         print('not an option')
         return
@@ -152,6 +154,8 @@ def get_points(mode: int = 0) -> None:
             normal_mode()
         case 1:
             big_attempt()
+        case 2:
+            hoard()
 
 
 def normal_mode() -> None:
@@ -169,3 +173,12 @@ def normal_mode() -> None:
 
 def big_attempt() -> None:
     pallet_place('cen')
+
+def hoard() -> NotImplementedError:
+    '''
+    This is an experimental feature that has not yet been implemented.
+    There should be no way to reach this, but please do not attempt to use it
+    '''
+    raise NotImplementedError
+
+    #pallet_place('back')

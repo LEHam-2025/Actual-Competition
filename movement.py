@@ -22,6 +22,7 @@ from math import degrees, cos
 
 DCONST = 0.4 #DRIVE CONSTANT - SPEED OF DRIVING
 ACONST = 0.4 #ANGLE CONSTANT - SPEED OF TURN
+SCONST = 4   #SERVO CONSTANT - TIME TO GO TO THE TOP
 
 DTIME = 2.5827 #DRIVE TIME - SEE CODE
 ATIME = 0.0135 #TIME TO TURN
@@ -147,60 +148,57 @@ def turn(angle: float, unit: str = 'd', speed: float = 0.2, rest: float = 0.1) -
     r.sleep(rest)
 
 def pickup(start_height = None, end_height = None):
-    servoBoard.servos[ARMSERVO].position = 0.3
-    robot.sleep(4)
-    servoBoard.servos[ARMSERVO].position = -0.3
-    robot.sleep(6)
-    servoBoard.servos[ARMSERVO].position = 0
-    servoBoard.servos[PINIONSERVO].position = 1
-    robot.sleep(4)
-    servoBoard.servos[PINIONSERVO].position = 0
+    arm_move(start_height)
+    grab()
+    arm_move(end_height)
      
 def drop(start_height = None):
-    servoBoard.servos[ARMSERVO].position = -0.3
-    robot.sleep(4)
-    servoBoard.servos[ARMSERVO].position = 0
-    servoBoard.servos[PINIONSERVO].position = -1
-    robot.sleep(6)
-    servoBoard.servos[PINIONSERVO].position = 0
+    arm_move(start_height)
+    release()
 
-def arm_move(new_pos: float) -> NotImplementedError:
+def arm_move(new_pos: float) -> None:
     '''
     Moves the arm to a different height.
     \nnew_pos is a decimal between 0 and 1 which is how far up the pinion to go
     \nThis is unfortunately no longer just a wrapper since we now have to come up with logic for this
-    \nOne of the things left to do. Not yet implemented
     '''
     
     distance = arm_height - new_pos
+
+    if distance >= 0:
+        PINION_SERVO.position = 1
+    else:
+        PINION_SERVO.position = -1
+    
+    r.sleep(distance*SCONST)
+    PINION_SERVO.position = 0
     #Run the servo for a certain amount of time
     arm_height = new_pos
+    r.sleep(0.1)
 
-    raise NotImplementedError('The arm functions have not yet been made')
-
-def grab() -> NotImplementedError:
+def grab() -> None:
     '''
-    Closes the arm if it is not already closed.
-    \nNot yet implemented
+    Closes the arm
     '''
 
-    if arm_open:
-        pass #Close
-        arm_open = False
+    ARM_SERVO.position = 0.5
+    r.sleep(2)
+    ARM_SERVO.position = -0.5
+    r.sleep(3)
+    ARM_SERVO.position = 0
+    r.sleep(0.1)
     
-    raise NotImplementedError('The arm functions have not yet been made')
-
-def release() -> NotImplementedError:
+def release() -> None:
     '''
     Opens the arm if it is not already open.
     \nNot yet implemented
     '''
 
-    if not arm_open:
-        pass #Open
-        arm_open = True
-    
-    raise NotImplementedError('The arm functions have not yet been made')
+    ARM_SERVO.position = 0.5
+    r.sleep(1)
+    ARM_SERVO.position = 0
+    r.sleep(0.1)
+
 
 def align(marker_ID, accuracy: float = 0.02, type: str = 'h') -> None:
     '''
