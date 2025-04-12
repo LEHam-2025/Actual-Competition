@@ -9,6 +9,8 @@ This library also imports from math for calculations
 Kenny: To be honest, a lot of logic ended up here as well.
 I don't have the effort to move anything, but I think it would be better to have two files instead of three:
 One for sensing and movement and one for logic, basically doing a hardware/software split.
+
+Maneet: the servo was goated inserting sauce now
 '''
 
 
@@ -144,23 +146,23 @@ def turn(angle: float, unit: str = 'd', speed: float = 0.2, rest: float = 0.1) -
 
     r.sleep(rest)
 
-def pickup(start_height: float = None, end_height: float = None) -> None:
-    '''
-    Grabs a pallet at start_height and finishes movement at end_height
-    '''
-
-    arm_move(start_height)
-    grab()
-    arm_move(end_height)
+def pickup(start_height = None, end_height = None):
+    servoBoard.servos[ARMSERVO].position = 0.3
+    robot.sleep(4)
+    servoBoard.servos[ARMSERVO].position = -0.3
+    robot.sleep(6)
+    servoBoard.servos[ARMSERVO].position = 0
+    servoBoard.servos[PINIONSERVO].position = 1
+    robot.sleep(4)
+    servoBoard.servos[PINIONSERVO].position = 0
      
-def drop(start_height: float = None, end_height: float = None) -> None:
-    '''
-    Moves arm to start_height, drops the pallet and then moves the arm to end_height
-    '''
-
-    arm_move(start_height)
-    release()
-    arm_move(end_height)
+def drop(start_height = None):
+    servoBoard.servos[ARMSERVO].position = -0.3
+    robot.sleep(4)
+    servoBoard.servos[ARMSERVO].position = 0
+    servoBoard.servos[PINIONSERVO].position = -1
+    robot.sleep(6)
+    servoBoard.servos[PINIONSERVO].position = 0
 
 def arm_move(new_pos: float) -> NotImplementedError:
     '''
